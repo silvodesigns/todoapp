@@ -6,10 +6,9 @@
 
 <body>
     <ul>
-        <li>Todo 1</li>
-        <li></li>
-        <li></li>
-        <li></li>
+        {%for d in data%}
+        <li>{{d.description}}</li>
+        {% endfor %}
     </ul>
 </body>
 
