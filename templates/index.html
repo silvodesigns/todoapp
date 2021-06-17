@@ -6,6 +6,12 @@
         .hidden {
             display: none
         }
+
+        ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
     </style>
 </head>
 
@@ -18,10 +24,18 @@
     <div id="error" class="hidden">Something went wrong !</div>
     <ul id="todos">
         {%for d in data%}
-        <li>{{d.description}}</li>
+        <li><input class="checked-completed" type="checkbox" {% if d.completed %} checked {% endif %} />
+            {{d.description}}</li>
         {% endfor %}
     </ul>
     <script>
+        const boxes = document.querySelectorAll(".checked-completed");
+        for (i = 0; i < boxes.length; i++) {
+            boxes[i].onchange = (function (e) {
+                console.log('event', e)
+            })
+        }
+
         document.getElementById('form').onsubmit = function (e) {
             e.preventDefault();
             fetch('/todos/create', {
