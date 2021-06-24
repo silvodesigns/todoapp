@@ -4,6 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import sys
 
+from sqlalchemy.orm import backref
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://silvo@localhost:5432/todoapp'
 db = SQLAlchemy(app)
@@ -14,10 +16,17 @@ class Todo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(), nullable=False)
     completed = db.Column(db.Boolean, nullable=False, default=False)
+    list_id = db.Column(db.Integer, db.ForeignKey('todolist.id'), nullable=False)
     
     
     def __repr__(self):
         return f'<Todo {self.id} {self.description}>'
+
+class Todolist(db.Model):
+    __tablename__='todolist'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(), nullable=False)
+    todo = db.relationship('Todo', backref="list", lazy=True)
     
 # db.create_all()
 
@@ -57,10 +66,25 @@ def set_completed_todo(todo_id):
     finally:
         db.session.close()
     return redirect(url_for('index'))
+
+@app.route('/todos/<todo_id>', methods=['DELETE'])
+def delete_todo(todo_id):
+  try:
+    Todo.query.filter_by(id=todo_id).delete()
+    db.session.commit()
+  except:
+    db.session.rollback()
+  finally:
+    db.session.close()
+  return jsonify({ 'success': True })
     
-    
-    
+@app.route('/lists/<list_id>')
+def get_list_todo(list_id):
+    return render_template('index.html',
+    lists = Todolist.query.all(),
+    active_list=Todolist.query.get(list_id),
+    data =Todo.query.filter_by(list_id=list_id).order_by('id').all())
 
 @app.route('/')
 def index():
-    return render_template('index.html', data =Todo.query.order_by('id').all())
+    return redirect(url_for('get_list_todo',list_id=1))
